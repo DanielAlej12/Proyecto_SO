@@ -132,3 +132,55 @@ void calculateAverages(SimulationResult& result) {
     result.avg_E = total_E / count;
     result.avg_I = total_I / count;
 }
+
+// --- 5. ALGORITMOS DE PLANIFICACIÓN ---
+
+// FIFO
+SimulationResult runScanningFIFO(vector<Activity> activities) {
+    int currentTime = 0;
+    int completedCount = 0;
+    int n = activities.size();
+
+    while (completedCount < n) {
+        bool found = false;
+        for (int i = 0; i < n; ++i) {
+            Activity& act = activities[i];
+            if (!act.isCompleted && act.ti <= currentTime) {
+                act.tf = currentTime + act.t;
+                currentTime = act.tf;
+                act.isCompleted = true;
+                completedCount++;
+                found = true;
+                break; // Sale al encontrar la primera lista
+            }
+        }
+
+        if (!found) {
+            // Avanza al siguiente ti mínimo pendiente
+            int minTi = INT_MAX;
+            for (const auto& act : activities) {
+                if (!act.isCompleted && act.ti < minTi) {
+                    minTi = act.ti;
+                }
+            }
+            if (minTi != INT_MAX) currentTime = minTi;
+            else break; // No quedan actividades
+        }
+    }   
+
+    vector<Activity> completedActivities;
+    for (const auto& s : activities) {
+        Activity act;
+        act.name = s.name;
+        act.ti = s.ti;
+        act.t = s.t;
+        act.tf = s.tf;
+        calculateMetrics(act);
+        completedActivities.push_back(act);
+    }
+    
+    SimulationResult result;
+    result.completedActivities = completedActivities;
+    calculateAverages(result);
+    return result;
+}
