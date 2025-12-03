@@ -314,3 +314,49 @@ SimulationResult runRR(const vector<Activity>& originalActivities, int quantum) 
     calculateAverages(result);
     return result;
 }
+
+// --- 6. ESCRITURA DE RESULTADOS ---
+void writeResults(ofstream& outfile, const string& method, const SimulationResult& result) {
+    const int W_NAME = 12;
+    const int W_TI = 5;
+    const int W_T = 5;
+    const int W_TF = 5;
+    const int W_METRIC = 10; // Para T y E
+    const int W_RATIO = 12; // Para I
+
+    outfile << "========================================================\n";
+    outfile << "           RESULTADOS DEL MÉTODO: " << method << "\n";
+    outfile << "========================================================\n";
+
+    // Encabezados de la Tabla
+    outfile << left << setw(W_NAME) << "Actividad"
+            << "| " << right << setw(W_TI) << "ti"
+            << " | " << right << setw(W_T) << "t"
+            << " | " << right << setw(W_TF) << "tf"
+            << " | " << right << setw(W_METRIC) << "T (Total)" 
+            << " | " << right << setw(W_METRIC) << "E (Espera)"
+            << " | " << right << setw(W_RATIO) << "I (Servicio)"
+            << "\n";
+    
+    outfile << "------------" << "+-------" << "+-------" << "+-------" << "+------------" << "+------------" << "+-------------\n";
+
+    // Datos de Actividades
+    for (const auto& act : result.completedActivities) {
+        outfile << left << setw(W_NAME) << act.name 
+                << "| " << right << setw(W_TI) << act.ti 
+                << " | " << right << setw(W_T) << act.t 
+                << " | " << right << setw(W_TF) << act.tf 
+                << " | " << right << setw(W_METRIC) << act.T 
+                << " | " << right << setw(W_METRIC) << act.E 
+                << " | " << right << setw(W_RATIO) << fixed << setprecision(4) << act.I 
+                << "\n";
+    }
+
+    // Promedios
+    outfile << "\n--- Promedios ---\n";
+    outfile << "Promedio T (Total): " << fixed << setprecision(4) << result.avg_T << "\n";
+    outfile << "Promedio E (Espera):  " << fixed << setprecision(4) << result.avg_E << "\n";
+    outfile << "Promedio I (Servicio): " << fixed << setprecision(4) << result.avg_I << "\n";
+    outfile << "Tiempo de Ejecución: " << fixed << setprecision(6) << result.executionTime << " segundos.\n";
+    outfile << "\n\n";
+}
