@@ -387,3 +387,56 @@ void compareAndWriteBest(ofstream& outfile, const SimulationResult& fifo, const 
     outfile << "EL MEJOR MÉTODO DE PLANIFICACIÓN ES: " << best_method << " con un Promedio I de "
             << fixed << setprecision(4) << best_I << ".\n";
 }
+
+// --- 7. FUNCIÓN PRINCIPAL (MAIN) ---
+int main() {
+    string csv_path;
+    int quantum;
+    const string output_filename = "resultados_planificacion.txt";
+
+    cout << "--- Simulador de Planificacion de CPU ---\n";
+    cout << "Ingrese la ruta del archivo CSV: "; cin >> csv_path;
+
+    cout << "Ingrese el Quantum (Q) para Round Robin (entero positivo): ";
+    if (!(cin >> quantum) || quantum <= 0) {
+        cerr << "Error: El Quantum debe ser un número entero positivo.\n";
+        return 1;
+    }
+
+    vector<Activity> activities = readActivities(csv_path);
+    if (activities.empty()) {
+        cerr << "No hay actividades válidas para procesar. Saliendo.\n";
+        return 1;
+    }
+    cout << "\nSe leyeron " << activities.size() << " actividades.\n";
+
+    cout << "Simulando FIFO..." << endl;
+    SimulationResult fifo_res = runMultipleTimes(runScanningFIFO, activities, 1000);
+    
+    cout << "Simulando LIFO..." << endl;
+    SimulationResult lifo_res = runMultipleTimes(runScanningLIFO, activities, 1000);
+    
+    cout << "Simulando Round Robin..." << endl;
+    SimulationResult rr_res = runMultipleTimes([&](const vector<Activity>& acts) { 
+        return runRR(acts, quantum); 
+    }, activities, 1000);
+
+    ofstream outfile(output_filename);
+    if (!outfile.is_open()) {
+        cerr << "Error: No se pudo crear o abrir el archivo de salida: " << output_filename << endl;
+        return 1;
+    }
+    
+    writeResults(outfile, "FIFO", fifo_res);
+    writeResults(outfile, "LIFO", lifo_res);
+    writeResults(outfile, "Round Robin", rr_res);
+
+    compareAndWriteBest(outfile, fifo_res, lifo_res, rr_res);
+
+    outfile.close();
+    
+    cout << "\n--- Proceso Completado ---\n";
+    cout << "Resultados y comparacion guardados en: " << output_filename << endl;
+
+    return 0;
+}
