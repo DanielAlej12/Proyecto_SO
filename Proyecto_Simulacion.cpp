@@ -234,3 +234,83 @@ SimulationResult runScanningLIFO(vector<Activity> activities) {
     calculateAverages(result);
     return result;
 }
+
+// Round Robin
+SimulationResult runRR(const vector<Activity>& originalActivities, int quantum) {
+    if (quantum <= 0) {
+        SimulationResult result;
+        return result;
+    }
+
+    struct RR_Activity_State {
+        string name;
+        int ti;
+        int t_initial;
+        int t_remaining;
+        int tf = 0;
+        bool isCompleted = false;
+    };
+
+    vector<RR_Activity_State> all_activities;
+    for (const auto& act : originalActivities) {
+        all_activities.push_back({act.name, act.ti, act.t, act.t, 0, false});
+    }
+
+    int currentTime = 0;
+    int completedCount = 0;
+    size_t currentIndex = 0;
+    int n = all_activities.size();
+
+    while (completedCount < n) {
+        RR_Activity_State& act = all_activities[currentIndex];
+
+        if (!act.isCompleted && act.ti <= currentTime && act.t_remaining > 0) {
+            int execTime = min(act.t_remaining, quantum);
+            act.t_remaining -= execTime;
+            currentTime += execTime;
+
+            if (act.t_remaining == 0) {
+                act.tf = currentTime;
+                act.isCompleted = true;
+                completedCount++;
+            }
+        } else {
+            // Verifica si hay alguna tarea lista en currentTime
+            bool anyReady = false;
+            for (const auto& a : all_activities) {
+                if (!a.isCompleted && a.ti <= currentTime) {
+                    anyReady = true;
+                    break;
+                }
+            }
+            if (!anyReady) {
+                // Avanzar tiempo al próximo ti pendiente para evitar bloqueo
+                int minTi = INT_MAX;
+                for (const auto& a : all_activities) {
+                    if (!a.isCompleted && a.ti > currentTime && a.ti < minTi) {
+                        minTi = a.ti;
+                    }
+                }
+                if (minTi != INT_MAX) currentTime = minTi;
+            }
+        }
+
+        currentIndex = (currentIndex + 1) % n;
+    }
+
+    vector<Activity> completedActivities;
+    for (const auto& s : all_activities) {
+        Activity act;
+        act.name = s.name;
+        act.ti = s.ti;
+        act.t = s.t_initial;
+        act.tf = s.tf;
+        calculateMetrics(act);
+        completedActivities.push_back(act);
+    }
+
+    SimulationResult result;
+    result.completedActivities = completedActivities;
+    calculateAverages(result);
+    return result;
+}
