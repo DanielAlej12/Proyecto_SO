@@ -74,3 +74,61 @@ void calculateMetrics(Activity& act) {
     act.E = act.T - act.t;
     act.I = (double)act.t / act.T;
 }
+
+// --- 3. LECTURA DEL ARCHIVO CSV ---
+vector<Activity> readActivities(const string& filename) {
+    vector<Activity> activities;
+    ifstream file(filename);
+
+    if (!file.is_open()) {
+        cerr << "Error: No se pudo abrir el archivo CSV: " << filename << endl;
+        return activities;
+    }
+
+    string line;
+    while (getline(file, line)) {
+        if (line.empty()) continue;
+
+        stringstream ss(line);
+        string segment;
+        Activity act;
+
+        try {
+            if (!getline(ss, segment, ',')) continue;
+            act.name = segment;
+
+            if (!getline(ss, segment, ',')) continue;
+            act.ti = stoi(segment);
+
+            if (!getline(ss, segment, ',')) continue;
+            act.t = stoi(segment);
+
+            if (act.t <= 0) continue; 
+
+            act.tf = 0; act.T = 0; act.E = 0; act.I = 0.0;
+            act.isCompleted = false; 
+            activities.push_back(act);
+        } catch (const exception& e) {
+            cerr << "Error de formato en la línea: '" << line << "'. Detalle: " << e.what() << endl;
+        }
+    }
+    return activities;
+}
+
+// --- 4. CÁLCULO DE PROMEDIOS ---
+void calculateAverages(SimulationResult& result) {
+    double total_T = 0.0;
+    double total_E = 0.0;
+    double total_I = 0.0;
+    int count = result.completedActivities.size();
+
+    for (const auto& act : result.completedActivities) {
+        total_T += act.T;
+        total_E += act.E;
+        total_I += act.I;
+    }
+
+    result.avg_T = total_T / count;
+    result.avg_E = total_E / count;
+    result.avg_I = total_I / count;
+}
