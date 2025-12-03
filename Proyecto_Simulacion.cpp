@@ -360,3 +360,30 @@ void writeResults(ofstream& outfile, const string& method, const SimulationResul
     outfile << "Tiempo de Ejecución: " << fixed << setprecision(6) << result.executionTime << " segundos.\n";
     outfile << "\n\n";
 }
+
+void compareAndWriteBest(ofstream& outfile, const SimulationResult& fifo, const SimulationResult& lifo, const SimulationResult& rr) {
+    double best_I = fifo.avg_I;
+    string best_method = "FIFO";
+
+    if (lifo.avg_I > best_I) {
+        best_I = lifo.avg_I;
+        best_method = "LIFO";
+    }
+
+    if (rr.avg_I > best_I) {
+        best_I = rr.avg_I;
+        best_method = "Round Robin";
+    }
+
+    outfile << "========================================================\n";
+    outfile << "          COMPARACIÓN FINAL DE ALGORITMOS\n";
+    outfile << "========================================================\n";
+    outfile << "Métrica de Comparación Principal: Mayor Índice de Servicio (I)\n\n";
+    outfile << "Resultados: \n";
+    outfile << "  FIFO (Promedio I): " << fixed << setprecision(4) << fifo.avg_I << "\n";
+    outfile << "  LIFO (Promedio I): " << fixed << setprecision(4) << lifo.avg_I << "\n";
+    outfile << "  Round Robin (Promedio I): " << fixed << setprecision(4) << rr.avg_I << "\n\n";
+
+    outfile << "EL MEJOR MÉTODO DE PLANIFICACIÓN ES: " << best_method << " con un Promedio I de "
+            << fixed << setprecision(4) << best_I << ".\n";
+}
