@@ -67,3 +67,10 @@ SimulationResult runMultipleTimes(function<SimulationResult(vector<Activity>)> a
     
     return avg_result;
 }
+
+// --- 2. FUNCIÓN DE CÁLCULO DE MÉTRICAS ---
+void calculateMetrics(Activity& act) {
+    act.T = act.tf - act.ti;
+    act.E = act.T - act.t;
+    act.I = (double)act.t / act.T;
+}
